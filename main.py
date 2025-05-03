@@ -1,51 +1,54 @@
-from turtle import Screen
-from paddle import Paddle
+import time
+from turtle import Turtle, Screen
 from ball import Ball
+from paddle import Paddle
+from score import Score
 
 screen = Screen()
-screen.setup(width=800, height=600)
 screen.bgcolor("black")
-screen.title("Pong Game")
+screen.setup(width=600, height=800)
+screen.title("PONG_GAME")
 screen.tracer(0)
 
-# Create paddles
-left_paddle = Paddle()
-left_paddle.goto(-350, 0)
+# Paddles
+l_paddle = Paddle()
+l_paddle.goto(-270, 0)
 
-right_paddle = Paddle()
-right_paddle.goto(350, 0)
+r_paddle = Paddle()
+r_paddle.goto(270, 0)
 
+# Ball and Scores
 ball = Ball()
+l_score = Score((-100, 350))
+r_score = Score((100, 350))
 
-# Key bindings
+# Controls
 screen.listen()
-screen.onkeypress(left_paddle.go_up, "w")
-screen.onkeypress(left_paddle.go_down, "s")
-screen.onkeypress(right_paddle.go_up, "Up")
-screen.onkeypress(right_paddle.go_down, "Down")
+screen.onkey(l_paddle.go_up, "w")
+screen.onkey(l_paddle.go_down, "s")
+screen.onkey(r_paddle.go_up, "Up")
+screen.onkey(r_paddle.go_down, "Down")
 
+# Game Loop
 game_is_on = True
-
 while game_is_on:
+    time.sleep(0.07)  # Control speed
+    screen.update()
     ball.move()
 
-    # Check for ball collision with top and bottom walls
-    if ball.ycor() > 290 or ball.ycor() < -290:
+    # Wall collision
+    if ball.ycor() > 380 or ball.ycor() < -380:
         ball.bounce_y()
 
-    # Check for ball collision with paddles
-    if (340 < ball.xcor() < 350) and (
-            right_paddle.ycor() + 50 > ball.ycor() > right_paddle.ycor() - 50):
+    # Paddle collision (right paddle first)
+    if (ball.distance(r_paddle) < 50 and ball.xcor() > 250) or (ball.distance(l_paddle) < 50 and ball.xcor() < -250):
         ball.bounce_x()
 
-    if (-340 > ball.xcor() > -350) and (
-            left_paddle.ycor() + 50 > ball.ycor() > left_paddle.ycor() - 50):
-        ball.bounce_x()
-
-    # If ball goes out of bounds (left or right side), reset it
-    if ball.xcor() > 390 or ball.xcor() < -390:
-        ball.refresh()
-
-    screen.update()
+    # Missed ball (left or right)
+    missed = ball.refresh()
+    if missed == "right":
+        l_score.increase_score()
+    elif missed == "left":
+        r_score.increase_score()
 
 screen.exitonclick()
